@@ -1,0 +1,281 @@
+import 'dart:ui';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
+import 'package:phonepayz/components/loader.dart';
+import 'package:phonepayz/models/getMobileOperators_response.dart';
+import 'package:phonepayz/modules/bottomNavigationBar/main_page.dart';
+import 'package:phonepayz/network/api_provider.dart';
+import 'package:phonepayz/utils/FadeTransitionPageRouteBuilder.dart';
+import 'package:phonepayz/utils/constants.dart';
+
+
+class MobileRechargePage extends StatefulWidget{
+  @override
+  _MobileRechargePageState createState() => _MobileRechargePageState();
+}
+
+class _MobileRechargePageState extends State<MobileRechargePage> {
+  bool isLoading = false;
+  String mobile = "";
+  String amount = "";
+  String mobileCode = "";
+  String token = "";
+  List<MobileOperators> mobileOperators = [];
+  MobileOperators selectedMobileOperator;
+
+  getButtonWidget(){
+    if(isLoading){
+      return Loader();
+    }else{
+      return Text("RECHARGE",style: TextStyle(fontSize: 16,fontWeight: FontWeight.bold,color: Colors.white),);
+    }
+  }
+
+  void getToken() {
+    var firebaseAuth = FirebaseAuth.instance;
+    if (firebaseAuth.currentUser != null) {
+      firebaseAuth.currentUser.getIdTokenResult(true).then((onValue) {
+        print(onValue.token);
+        token = onValue.token;
+        getMobileOperators();
+      });
+    }
+}
+
+  getMobileOperators(){
+    setState(() {
+      isLoading = true;
+    });
+    ApiProvider().getMobileOperators(token).then((response) {
+      mobileOperators = response.operators;
+      setState(() {
+        isLoading = false;
+      });
+    }).catchError((error){
+      setState(() {
+        isLoading = false;
+      });
+      Constants().showDialogBlurBg(context: context,msg:error.toString());
+    });
+  }
+
+  doMobileRecharge(){
+    setState(() {
+      isLoading = true;
+    });
+    ApiProvider().doMobileRecharge(mobile, int.parse(amount), mobileCode, token).then((response){
+      setState(() {
+        isLoading = false;
+      });
+      if(response.status){
+        Constants().showDialogBlurBg(
+            context: context,
+            msg: response.message
+        );
+        Navigator.pushReplacement(context, FadeTransitionPageRouteBuilder(page: MainPage()));
+      }else{
+        Constants().showDialogBlurBg(
+            context: context,
+            msg: response.message
+        );
+      }
+    }).catchError((error){
+      setState(() {
+        isLoading = false;
+      });
+      Constants().showDialogBlurBg(
+          context: context,
+          msg: error.toString()
+      );
+    });
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    getToken();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        centerTitle: true,
+        leading: IconButton(
+          icon: Icon(Icons.keyboard_backspace,size: 24,),
+          onPressed: (){
+            Navigator.pop(context);
+          },
+        ),
+        backgroundColor: Constants().primaryColor,
+        title: Text("Mobile Recharge",style: TextStyle(fontWeight: FontWeight.bold,color: Colors.white),),
+      ),
+      body: Stack(
+        children: [
+          Padding(
+            padding: const EdgeInsets.only(left: 20,right: 20),
+            child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    SizedBox(height: 20,),
+                    Text("Mobile Number",style: TextStyle(fontSize: 14,fontWeight: FontWeight.bold)),
+                    SizedBox(height: 8,),
+                    Container(
+                      height: 50,
+                      child: TextField(
+                        style: TextStyle(letterSpacing: 2),
+                        keyboardType: TextInputType.number,
+                        autofocus: true,
+                        cursorColor: Constants().primaryColor,
+                        onChanged: (value){
+                          setState(() {
+                            mobile = value;
+                          });
+                        },
+                        decoration: InputDecoration(
+                            hintText: "Enter mobile number",
+                            contentPadding: EdgeInsets.all(8),
+                            hintStyle: TextStyle(fontSize: 14,color: Colors.grey.shade500,letterSpacing: 1),
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(4),
+                              borderSide: BorderSide(
+                                  color: Colors.grey.shade200
+                              ),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(4),
+                              borderSide: BorderSide(
+                                  color: Colors.grey.shade200
+                              ),
+                            ),
+                            filled: true,
+                            fillColor: Colors.grey.shade200
+                        ),
+                      ),
+                    ),
+                    SizedBox(height: 16,),
+                    Text("Select Operator",style: TextStyle(fontSize: 14,fontWeight: FontWeight.bold)),
+                    SizedBox(height: 8,),
+                    Container(
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(4),
+                        color: Colors.grey.shade200,
+                      ),
+                      height: 50,
+                      padding: EdgeInsets.only(left: 10,right: 10),
+                      child:  Row(
+                        children: [
+                          Expanded(
+                            child: DropdownButton<MobileOperators>(
+                                hint: Text("Select Operator",style: TextStyle(fontSize: 14,color: Colors.grey.shade500),),
+                                underline: Container(color: Colors.grey.shade200,),
+                                value: selectedMobileOperator,
+                                iconEnabledColor: Colors.grey.shade200,
+                                iconDisabledColor: Colors.grey.shade200,
+                                onChanged: (MobileOperators Value) {
+                                  setState(() {
+                                    selectedMobileOperator = Value;
+                                    mobileCode = selectedMobileOperator.code;
+                                  });
+                                },
+                                items: List.generate(mobileOperators.length, (index) {
+                                  return DropdownMenuItem<MobileOperators>(
+                                    value: mobileOperators[index],
+                                    child: Row(
+                                      children: [
+                                        Image.network("http://159.65.156.205:3000/"+mobileOperators[index].image,height: 24,width: 24,),
+                                        SizedBox(width: 10,),
+                                        Text(
+                                          mobileOperators[index].name,
+                                          style:  TextStyle(color: Colors.black,fontSize: 14),
+                                        ),
+                                      ],
+                                    ),
+                                  );
+                                })
+                            ),
+                          ),
+                          Icon(Icons.keyboard_arrow_down,color: Colors.grey.shade500,size: 18,),
+                        ],
+                      ),
+                    ),
+                    SizedBox(height: 16,),
+                    Text("Amount",style: TextStyle(fontSize: 14,fontWeight: FontWeight.bold)),
+                    SizedBox(height: 8,),
+                    Container(
+                      child: TextField(
+                        style: TextStyle(letterSpacing: 2),
+                        keyboardType: TextInputType.number,
+                        autofocus: true,
+                        cursorColor: Constants().primaryColor,
+                        onChanged: (value){
+                          setState(() {
+                            amount = value;
+                          });
+                        },
+                        maxLength: 4,
+                        decoration: InputDecoration(
+                            counterText: "",
+                            hintText: "Enter amount",
+                            contentPadding: EdgeInsets.all(8),
+                            hintStyle: TextStyle(fontSize: 14,color: Colors.grey.shade500,letterSpacing: 1),
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(4),
+                              borderSide: BorderSide(
+                                  color: Colors.grey.shade200
+                              ),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(4),
+                              borderSide: BorderSide(
+                                  color: Colors.grey.shade200
+                              ),
+                            ),
+                            filled: true,
+                            fillColor: Colors.grey.shade200
+                        ),
+                      ),
+                    ),
+                  ],)
+            ),
+          SafeArea(
+            child: Container(
+              alignment: Alignment.bottomCenter,
+              child: Container(
+                margin: EdgeInsets.only(bottom: 30,left: 20,right: 20),
+                height: 46,
+                width: double.infinity,
+                child: FlatButton(
+                    onPressed: isLoading?null:(){
+                      if(mobile.length == 10){
+                        if(amount.length <= 1){
+                          Constants().showDialogBlurBg(
+                              context: context,
+                              msg: "Amount must contain atleast two characters"
+                          );
+                        }else{
+                          doMobileRecharge();
+                        }
+                      }else{
+                        Constants().showDialogBlurBg(
+                            context: context,
+                            msg: "Enter your 10 digit mobile number"
+                        );
+                      }
+                    },
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(4)
+                    ),
+                    color: Constants().primaryColor,
+                    child: getButtonWidget()
+                ),
+              ),
+            ),
+          )
+        ],
+      ),
+    );
+  }
+}
