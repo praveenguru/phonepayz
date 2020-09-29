@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:phonepayz/models/generic_response.dart';
+import 'package:phonepayz/models/getDashboard_response.dart';
 import 'package:phonepayz/models/getDistributor_response.dart';
 import 'package:phonepayz/models/getDthOperators_response.dart';
 import 'package:phonepayz/models/getMobileOperators_response.dart';
@@ -133,10 +134,10 @@ class ApiProvider{
   }
 
 
-  Future<GenericResponse> doDthRecharge(String mobile,int amount,String operator,String token) async {
+  Future<GenericResponse> doDthRecharge(String number,int amount,String operator,String token) async {
     try {
       Response response = await _dio.post("/recharges/doDthRecharge",data: {
-        "mobile":mobile,
+        "number":number,
         "amount":amount,
         "operator_code":operator,
       },options: Options(headers: {
@@ -241,6 +242,7 @@ class ApiProvider{
       }));
       return GetTransactionsResponse.fromJson(response.data);
     } catch (error, stacktrace) {
+      print(error);
       if(error is DioError){
         return GetTransactionsResponse.fromJson(error.response.data);
       }else return GetTransactionsResponse.withError("some error happened try later");
@@ -257,6 +259,32 @@ class ApiProvider{
       if(error is DioError){
         return GetUserDetailsResponse.fromJson(error.response.data);
       }else return GetUserDetailsResponse.withError("some error happened try later");
+    }
+  }
+
+  Future<Dashboard> getDashboardData(String token) async {
+    try {
+      Response response = await _dio.get("/users/getDashboardData",options: Options(headers: {
+        "Authorization": 'Bearer $token'
+      }));
+      return Dashboard.fromJson(response.data);
+    } catch (error, stacktrace) {
+      if(error is DioError){
+        return Dashboard.fromJson(error.response.data);
+      }else return Dashboard.withError("some error happened try later");
+    }
+  }
+//admin
+  Future<GetAdminTransactions> getAllTransactions(String token) async {
+    try {
+      Response response = await _dio.get("/users/getAllTransactions",options: Options(headers: {
+        "Authorization": 'Bearer $token'
+      }));
+      return GetAdminTransactions.fromJson(response.data);
+    } catch (error, stacktrace) {
+      if(error is DioError){
+        return GetAdminTransactions.fromJson(error.response.data);
+      }else return GetAdminTransactions.withError("some error happened try later");
     }
   }
 }

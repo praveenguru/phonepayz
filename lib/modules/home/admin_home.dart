@@ -1,10 +1,14 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:phonepayz/modules/adminTransactions/adminTransactions.dart';
 import 'package:phonepayz/modules/dashboard/dashboard.dart';
 import 'package:phonepayz/modules/distributor/distributor.dart';
+import 'package:phonepayz/modules/login/admin_login.dart';
 import 'package:phonepayz/modules/retailer/retailer.dart';
 import 'package:phonepayz/modules/superDistributor/super_distributor.dart';
+import 'package:phonepayz/utils/FadeTransitionPageRouteBuilder.dart';
 
 class AdminHome extends StatefulWidget{
   @override
@@ -17,7 +21,7 @@ class _AdminHomeState extends State<AdminHome>{
   @override
   Widget build(BuildContext context) {
     return DefaultTabController(
-      length: 4,
+      length: 5,
       child: Scaffold(
           backgroundColor: Colors.grey.shade100,
           appBar: PreferredSize(
@@ -30,6 +34,22 @@ class _AdminHomeState extends State<AdminHome>{
                 margin: EdgeInsets.only(left: 20),
                 child: Image.asset("images/logo.png",height: 30,),
               ),
+              actions: [
+                Container(
+                  margin: EdgeInsets.only(right: 20,top: 10,bottom: 10),
+                  child: FlatButton(
+                      onPressed: () async{
+                        await FirebaseAuth.instance.signOut();
+                        Navigator.pushReplacement(context, FadeTransitionPageRouteBuilder(page: AdminLogin()));
+                      },
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      color: Colors.red.shade500,
+                      child: Text("Log Out",style: TextStyle(color: Colors.white,fontWeight: FontWeight.bold,fontSize: 16),)
+                  ),
+                ),
+              ],
               flexibleSpace: Container(
                 padding: EdgeInsets.only(left: 20),
                 child: Column(
@@ -46,6 +66,9 @@ class _AdminHomeState extends State<AdminHome>{
                         tabs: [
                           Tab(
                             child: Text("Dashboard"),
+                          ),
+                          Tab(
+                            child: Text("Transactions"),
                           ),
                           Tab(
                             child: Text("Super Distributors"),
@@ -66,12 +89,13 @@ class _AdminHomeState extends State<AdminHome>{
           body: Center(
             child: Container(
               constraints: BoxConstraints(
-                  maxWidth: 900
+                  maxWidth: 1200
               ),
               child: TabBarView(
                 physics: NeverScrollableScrollPhysics(),
                 children: [
                  Dashboard(),
+                 AdminTransactions(),
                  SuperDistributor(),
                  Distributor(),
                  Retailer(),

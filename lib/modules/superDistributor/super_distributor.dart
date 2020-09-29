@@ -238,23 +238,23 @@ class _SuperDistributorState extends State<SuperDistributor> {
                 headingRowColor: MaterialStateColor.resolveWith((states) => Colors.grey.shade50),
                 columns: [
                   DataColumn(
-                    label: Text("Name",style: TextStyle(),),
+                    label: Text("Name",style: TextStyle(fontWeight: FontWeight.bold),),
                     numeric: false,
                   ),
                   DataColumn(
-                    label: Text("Balance",style: TextStyle(),),
+                    label: Text("Balance",style: TextStyle(fontWeight: FontWeight.bold),),
                     numeric: false,
                   ),
                   DataColumn(
-                    label: Text("Mobile",style: TextStyle(),),
+                    label: Text("Mobile",style: TextStyle(fontWeight: FontWeight.bold),),
                     numeric: false,
                   ),
                   DataColumn(
-                    label: Text("Address",style: TextStyle(),),
+                    label: Text("Address",style: TextStyle(fontWeight: FontWeight.bold),),
                     numeric: false,
                   ),
                   DataColumn(
-                    label: Text("Action",style: TextStyle(),),
+                    label: Text("Action",style: TextStyle(fontWeight: FontWeight.bold),),
                     numeric: false,
                   ),
                 ],
@@ -263,16 +263,16 @@ class _SuperDistributorState extends State<SuperDistributor> {
                       (item) => DataRow(
                       cells: [
                         DataCell(
-                          Text(item.name),
+                          Text(item.name,style: TextStyle(fontSize: 16)),
                         ),
                         DataCell(
-                          Text(item.balance.toString()),
+                          Text("\u20B9 "+item.balance.toString(),style: TextStyle(fontSize: 16)),
                         ),
                         DataCell(
-                          Text(item.mobile),
+                          Text(item.mobile,style: TextStyle(fontSize: 16)),
                         ),
                         DataCell(
-                          Text(item.address),
+                          Text(item.address,style: TextStyle(fontSize: 16)),
                         ),
                         DataCell(
                           FlatButton(
@@ -304,6 +304,7 @@ class _SuperDistributorState extends State<SuperDistributor> {
             icon: Icon(Icons.add),
             label: Text("Create Super Distributor"),
           ),
+          SizedBox(height: 40,),
         ],
       ),
     ): Column(

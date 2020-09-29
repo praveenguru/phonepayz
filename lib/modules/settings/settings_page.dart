@@ -6,14 +6,28 @@ import 'package:phonepayz/modules/login/mobile_login.dart';
 import 'package:phonepayz/utils/FadeTransitionPageRouteBuilder.dart';
 import 'package:phonepayz/utils/constants.dart';
 
-class SettingsPage extends StatelessWidget{
+class SettingsPage extends StatefulWidget{
+  final String type;
+  SettingsPage({this.type});
+  @override
+  _SettingsPageState createState() => _SettingsPageState();
+}
+
+class _SettingsPageState extends State<SettingsPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        automaticallyImplyLeading: false,
         centerTitle: true,
         backgroundColor: Constants().primaryColor,
         title: Text("Settings",style: TextStyle(fontWeight: FontWeight.bold,color: Colors.white),),
+        leading: (widget.type == "SuperDistributor")?IconButton(
+          onPressed: (){
+            Navigator.pop(context);
+          },
+          icon: Icon(Icons.keyboard_backspace,color: Colors.white,size: 24,),
+        ):null,
       ),
       body: Stack(
         children: [
@@ -74,5 +88,4 @@ class SettingsPage extends StatelessWidget{
       ),
     );
   }
-
 }

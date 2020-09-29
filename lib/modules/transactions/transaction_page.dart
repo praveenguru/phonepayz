@@ -35,17 +35,21 @@ class _TransactionsPageState extends State<TransactionsPage> {
     }
   }
 
+  getStatusColor(String status){
+    status = status.toLowerCase();
+    if(status == "success"){
+      return Colors.green.shade500;
+    }else if(status == "pending"){
+      return Colors.purple.shade500;
+    }else{
+      return Colors.red.shade500;
+    }
+  }
+  
   getTransactions(String token){
    ApiProvider().getTransactions(token).then((response){
      if(response.status){
        transactionDetails = response.data.reversed.toList();
-       if(transactionDetails[pos].status == "Failed"){
-         statusColor = Colors.red;
-       }else if(transactionDetails[pos].status == "Success"){
-         statusColor = Colors.green;
-       }else if(transactionDetails[pos].status == "Pending"){
-         statusColor = Colors.purple;
-       }
        setState(() {
          viewState = ViewState.Content;
        });
@@ -54,17 +58,21 @@ class _TransactionsPageState extends State<TransactionsPage> {
            context: context,
            msg: response.message
        );
+       print(response.message);
      }
    }).catchError((error){
      setState(() {
        viewState = ViewState.Error;
      });
+     print(error);
    });
   }
 
   //getContentWidget
   getContentWidget(){
-    return (transactionDetails == null) ? Container() : SingleChildScrollView(
+    return (transactionDetails.isEmpty) ? Center(
+      child: Text("No Transactions",style: TextStyle(color: Colors.grey.shade500,fontSize: 16),),
+    ) : SingleChildScrollView(
       physics: BouncingScrollPhysics(),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -95,7 +103,7 @@ class _TransactionsPageState extends State<TransactionsPage> {
                                     borderRadius: BorderRadius.circular(30),
                                     color: Colors.grey.shade100
                                 ),
-                                child: Image.network("http://159.65.156.205:3000/"+transactionDetails[index].image,height: 24,width: 24,),
+                                child: Image.network(Constants.BASE_URL+"/"+transactionDetails[index].image,height: 24,width: 24,),
                               ),
                               SizedBox(width: 12,),
                               Expanded(
@@ -104,7 +112,7 @@ class _TransactionsPageState extends State<TransactionsPage> {
                                     children: [
                                       Text(transactionDetails[index].mobile+ " ("+transactionDetails[index].operator+")",style: TextStyle(fontSize: 14,fontWeight: FontWeight.w500),),
                                       SizedBox(height: 4,),
-                                      Text(transactionDetails[index].status,style: TextStyle(fontSize: 13,color: Colors.red),),
+                                      Text(transactionDetails[index].status,style: TextStyle(fontSize: 13,color: getStatusColor(transactionDetails[index].status)),),
                                     ],
                                   )
                               ),
@@ -173,6 +181,7 @@ class _TransactionsPageState extends State<TransactionsPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        automaticallyImplyLeading: false,
         centerTitle: true,
         backgroundColor: Constants().primaryColor,
         title: Text("Transactions",style: TextStyle(fontWeight: FontWeight.bold,color: Colors.white),),
