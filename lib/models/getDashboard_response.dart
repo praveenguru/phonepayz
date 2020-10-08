@@ -24,11 +24,11 @@ class Dashboard{
 }
 
 class OutstandingBalanceDetail{
-  String id;
+  int id;
   int balance;
   OutstandingBalanceDetail({this.id,this.balance});
   OutstandingBalanceDetail.fromJson(Map<String, dynamic>json){
-    this.id = json['_id'] ?? "";
+    this.id = json['id'] ?? 0;
     this.balance = json['balance'] ?? 0;
   }
 }

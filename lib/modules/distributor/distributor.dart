@@ -4,8 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:phonepayz/components/admin_textfield_filled.dart';
 import 'package:phonepayz/components/button_filled.dart';
 import 'package:phonepayz/components/loader.dart';
-import 'package:phonepayz/models/getDistributor_response.dart';
-import 'package:phonepayz/models/getSuperDistributors_response.dart';
+import 'package:phonepayz/models/getUser_response.dart';
 import 'package:phonepayz/network/api_provider.dart';
 import 'package:phonepayz/utils/constants.dart';
 
@@ -20,19 +19,57 @@ class _DistributorState extends State<Distributor> {
   String mobile = "";
   String address = "";
   String name = "";
-  String id = "";
+  int id = 0;
   bool onPressed = false;
   bool isLoading = false;
-  List<Distributors> distributors = [];
-  List<SuperDistributors> superDistributors = [];
-  SuperDistributors selectedSuperDistributor;
+  List<UserData> distributors = [];
+  List<UserData> superDistributor = [];
+  UserData selectedSuperDistributor;
+
+  getDistributors(){
+    setState(() {
+      isLoading = true;
+    });
+    ApiProvider().getUser(token, "Distributor").then((response) {
+      if(response != null){
+        distributors = response.userData;
+        setState(() {
+          isLoading = false;
+        });
+      }
+    }).catchError((error){
+      setState(() {
+        isLoading = false;
+      });
+      showErrorDialog(error.toString());
+    });
+  }
+
+  getSuperDistributors(){
+    setState(() {
+      isLoading = true;
+    });
+    ApiProvider().getUser(token, "SuperDistributor").then((response) {
+      if(response != null){
+        superDistributor = response.userData;
+        setState(() {
+          isLoading = false;
+        });
+      }
+    }).catchError((error){
+      setState(() {
+        isLoading = false;
+      });
+      showErrorDialog(error.toString());
+    });
+  }
 
   showErrorDialog(String message){
     showDialog(
         context: context,
         builder: (context){
           return AlertDialog(
-            title: Text("Alert",style: TextStyle(fontSize: 18,fontFamily: 'Quicksand',fontWeight: FontWeight.bold),),
+            title: Text("Message",style: TextStyle(fontSize: 18,fontFamily: 'Quicksand',fontWeight: FontWeight.bold),),
             content: Padding(
               padding: const EdgeInsets.only(top: 20),
               child: Text(message,style: TextStyle(fontSize: 14,fontFamily: 'Quicksand',height: 1.5),textAlign: TextAlign.center,),
@@ -46,24 +83,6 @@ class _DistributorState extends State<Distributor> {
         }
     );
   }
-
-  getSuperDistributors(String token){
-    ApiProvider().getSuperDistributors(token).then((response) {
-      superDistributors = response.superDistributors;
-      setState(() {
-        isLoading = false;
-      });
-      if(response.status == false){
-        showErrorDialog(response.message);
-      }
-    }).catchError((error){
-      setState(() {
-        isLoading = false;
-      });
-      showErrorDialog(error.toString());
-    });
-  }
-
   getButtonWidget() {
     if (isLoading) {
       return SizedBox(
@@ -84,15 +103,11 @@ class _DistributorState extends State<Distributor> {
     setState(() {
       isLoading = true;
     });
-    ApiProvider().createDistributor(token, name, address, mobile, id).then((response){
-      print(id);
-      if(response.status){
+    ApiProvider().addUser(token, "Distributor", name, mobile, address, id).then((response) async{
+      await showErrorDialog(response.message);
+      await getDistributors();
+      setState(() {
         onPressed = false;
-        getDistributors(token);
-      }else{
-        showErrorDialog(response.message);
-      }
-      setState(() {
         isLoading = false;
       });
     }).catchError((error){
@@ -103,23 +118,6 @@ class _DistributorState extends State<Distributor> {
     });
   }
 
-
-  getDistributors(String token){
-    ApiProvider().getDistributors(token).then((response) {
-      distributors = response.distributors;
-      setState(() {
-        isLoading = false;
-      });
-      if(response.status == false){
-        showErrorDialog(response.message);
-      }
-    }).catchError((error){
-      setState(() {
-        isLoading = false;
-      });
-      showErrorDialog(error.toString());
-    });
-  }
   getToken() {
     setState(() {
       isLoading = true;
@@ -129,26 +127,20 @@ class _DistributorState extends State<Distributor> {
       firebaseAuth.currentUser.getIdTokenResult(true).then((val) {
         print(val.token);
         token = val.token;
-        getDistributors(val.token);
-        getSuperDistributors(token);
+        getDistributors();
+        getSuperDistributors();
       });
     }
   }
 
-  addMoney(String id){
+  addMoney(int id){
     setState(() {
       isLoading = true;
     });
-    ApiProvider().addMoney(token, int.parse(amount), id).then((response) {
-      setState(() {
-        isLoading = false;
-      });
-      if(response.status){
-        Navigator.pop(context);
-        getDistributors(token);
-      }else{
-        showErrorDialog(response.message);
-      }
+    ApiProvider().addMoney(token, int.parse(amount), id).then((response) async{
+      Navigator.pop(context);
+      await showErrorDialog(response.message);
+      getDistributors();
     }).catchError((error){
       setState(() {
         isLoading = false;
@@ -157,7 +149,7 @@ class _DistributorState extends State<Distributor> {
     });
   }
 
-  showDialogBox(String id){
+  showDialogBox(int id){
     showDialog(
         context: context,
         builder: (context){
@@ -175,7 +167,6 @@ class _DistributorState extends State<Distributor> {
                     child: TextField(
                       cursorColor: Constants().primaryColor,
                       keyboardType: TextInputType.number,
-                      maxLength: 4,
                       onChanged: (val){
                         setState(() {
                           amount = val;
@@ -206,8 +197,8 @@ class _DistributorState extends State<Distributor> {
                     width: 280,
                     margin: EdgeInsets.only(left: 20,right: 20,top: 20),
                     child: FlatButton(
-                        onPressed: (){
-                          addMoney(id);
+                        onPressed: () {
+                           addMoney(id);
                         },
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(4),
@@ -240,7 +231,7 @@ class _DistributorState extends State<Distributor> {
           Text("Please wait",style: TextStyle(),),
         ],
       ),
-    ):(onPressed == false)?SingleChildScrollView(
+    ):(distributors == null)?Container():(onPressed == false)?SingleChildScrollView(
       scrollDirection: Axis.vertical,
       child: Column(
         children: [
@@ -250,7 +241,7 @@ class _DistributorState extends State<Distributor> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 SizedBox(height: 100,),
-                Text("No distributors were found, create a distributor",style: TextStyle(),),
+                Text("No distributors were found, create a retailer",style: TextStyle(),),
               ],
             ),
           ):Card(
@@ -326,7 +317,7 @@ class _DistributorState extends State<Distributor> {
             },
             backgroundColor: Colors.green.shade500,
             icon: Icon(Icons.add),
-            label: Text("Create Super Distributor"),
+            label: Text("Create Distributor"),
           ),
           SizedBox(height: 40,),
         ],
@@ -407,20 +398,20 @@ class _DistributorState extends State<Distributor> {
                         child:  Row(
                           children: [
                             Expanded(
-                              child: DropdownButton<SuperDistributors>(
+                              child: DropdownButton<UserData>(
                                 hint: Text("Select Super Distributor",style: TextStyle(fontSize: 14,color: Colors.grey.shade500),),
                                 underline: Container(color: Colors.grey.shade200,),
                                 value: selectedSuperDistributor,
                                 iconEnabledColor: Colors.grey.shade200,
                                 iconDisabledColor: Colors.grey.shade200,
-                                onChanged: (SuperDistributors Value) {
+                                onChanged: (UserData Value) {
                                   setState(() {
                                     selectedSuperDistributor = Value;
                                     id = selectedSuperDistributor.id;
                                   });
                                 },
-                                items: superDistributors.map((SuperDistributors user) {
-                                  return  DropdownMenuItem<SuperDistributors>(
+                                items: superDistributor.map((UserData user) {
+                                  return  DropdownMenuItem<UserData>(
                                     value: user,
                                     child: Text(
                                       user.name,

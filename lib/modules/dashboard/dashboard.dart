@@ -173,7 +173,7 @@ class _DashboardState extends State<Dashboard> {
                       Container(
                         child: Column(
                           children: [
-                            Text(item.id.toUpperCase(),style: TextStyle(fontSize: 14,color: Colors.grey.shade500,fontWeight: FontWeight.bold),),
+                            Text(item.id.toString(),style: TextStyle(fontSize: 14,color: Colors.grey.shade500,fontWeight: FontWeight.bold),),
                             SizedBox(height: 8,),
                             Text("\u20B9" + item.balance.toString(),style: TextStyle(fontSize: 42,),),
                           ],

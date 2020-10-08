@@ -6,7 +6,7 @@ class Constants {
   Color primaryColor = Colors.indigo.shade500;
   Color secondaryTextColor = Colors.grey.shade500;
 
-  static const BASE_URL="https://api.phonepayz.in";
+  static const BASE_URL= "https://api.phonepayz.in";
 
   void showDialogBlurBg({BuildContext context,String msg}){
     double width = MediaQuery.of(context).size.width;
@@ -42,3 +42,6 @@ class Constants {
     );
   }
 }
+
+
+//user /user

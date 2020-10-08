@@ -2,11 +2,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:phonepayz/modules/bottomNavigationBar/main_page.dart';
 import 'modules/home/admin_home.dart';
-import 'modules/home/mobile_home.dart';
 import 'modules/login/admin_login.dart';
-import 'modules/login/mobile_login.dart';
 
 Future<User> getFirebaseUser() async{
   User firebaseUser = FirebaseAuth.instance.currentUser;
@@ -26,14 +23,10 @@ Future <void> main() async{
   if(user == null){
     if(kIsWeb){
       home = AdminLogin();
-    }else{
-      home = MobileLogin();
     }
   }else{
     if(kIsWeb){
       home = AdminHome();
-    }else{
-      home = MainPage();
     }
   }
   runApp(MyApp(home: home,));

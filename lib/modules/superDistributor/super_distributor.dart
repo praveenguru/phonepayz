@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:phonepayz/components/admin_textfield_filled.dart';
 import 'package:phonepayz/components/button_filled.dart';
 import 'package:phonepayz/components/loader.dart';
-import 'package:phonepayz/models/getSuperDistributors_response.dart';
+import 'package:phonepayz/models/getUser_response.dart';
 import 'package:phonepayz/network/api_provider.dart';
 import 'package:phonepayz/utils/constants.dart';
 
@@ -21,14 +21,14 @@ class _SuperDistributorState extends State<SuperDistributor> {
   String name = "";
   bool isLoading = false;
   bool onPressed = false;
-  List<SuperDistributors> superDistributors = [];
+  List<UserData> superDistributors = [];
 
   showErrorDialog(String message){
     showDialog(
         context: context,
         builder: (context){
           return AlertDialog(
-            title: Text("Alert",style: TextStyle(fontSize: 18,fontFamily: 'Quicksand',fontWeight: FontWeight.bold),),
+            title: Text("Message",style: TextStyle(fontSize: 18,fontFamily: 'Quicksand',fontWeight: FontWeight.bold),),
             content: Padding(
               padding: const EdgeInsets.only(top: 20),
               child: Text(message,style: TextStyle(fontSize: 14,fontFamily: 'Quicksand',height: 1.5),textAlign: TextAlign.center,),
@@ -59,49 +59,16 @@ class _SuperDistributorState extends State<SuperDistributor> {
     }
   }
 
-  getSuperDistributors(String token){
-    ApiProvider().getSuperDistributors(token).then((response) {
-      superDistributors = response.superDistributors;
-      setState(() {
-        isLoading = false;
-      });
-      if(response.status == false){
-        showErrorDialog(response.message);
-      }
-    }).catchError((error){
-      setState(() {
-        isLoading = false;
-      });
-      showErrorDialog(error.toString());
-    });
-  }
-  getToken() {
+  getSuperDistributors(){
     setState(() {
       isLoading = true;
     });
-    var firebaseAuth = FirebaseAuth.instance;
-    if (firebaseAuth.currentUser != null) {
-      firebaseAuth.currentUser.getIdTokenResult(true).then((val) {
-        print(val.token);
-        token = val.token;
-        getSuperDistributors(val.token);
-      });
-    }
-  }
-
-  addMoney(String id){
-    setState(() {
-      isLoading = true;
-    });
-    ApiProvider().addMoney(token, int.parse(amount), id).then((response) {
-      setState(() {
-        isLoading = false;
-      });
-      if(response.status){
-        Navigator.pop(context);
-        getSuperDistributors(token);
-      }else{
-        showErrorDialog(response.message);
+    ApiProvider().getUser(token, "SuperDistributor").then((response) {
+      if(response != null){
+        superDistributors = response.userData;
+        setState(() {
+          isLoading = false;
+        });
       }
     }).catchError((error){
       setState(() {
@@ -115,16 +82,13 @@ class _SuperDistributorState extends State<SuperDistributor> {
     setState(() {
       isLoading = true;
     });
-    ApiProvider().createSuperDistributor(token, name, address, mobile).then((response){
+    ApiProvider().addUser(token, "SuperDistributor", name, mobile, address, null).then((response) async{
+      await showErrorDialog(response.message);
+      await getSuperDistributors();
       setState(() {
+        onPressed = false;
         isLoading = false;
       });
-      if(response.status){
-        onPressed = false;
-        getSuperDistributors(token);
-      }else{
-        showErrorDialog(response.message);
-      }
     }).catchError((error){
       setState(() {
         isLoading = false;
@@ -133,7 +97,40 @@ class _SuperDistributorState extends State<SuperDistributor> {
     });
   }
 
-  showDialogBox(String id){
+  getToken() {
+    setState(() {
+      isLoading = true;
+    });
+    var firebaseAuth = FirebaseAuth.instance;
+    if (firebaseAuth.currentUser != null) {
+      firebaseAuth.currentUser.getIdTokenResult(true).then((val) {
+        print(val.token);
+        token = val.token;
+        getSuperDistributors();
+      });
+    }
+  }
+
+  addMoney(int id){
+    setState(() {
+      isLoading = true;
+    });
+    ApiProvider().addMoney(token, int.parse(amount), id).then((response) async{
+      Navigator.pop(context);
+      await getSuperDistributors();
+      await showErrorDialog(response.message);
+      setState(() {
+        isLoading = false;
+      });
+    }).catchError((error){
+      setState(() {
+        isLoading = false;
+      });
+      showErrorDialog(error.toString());
+    });
+  }
+
+  showDialogBox(int id){
     showDialog(
         context: context,
         builder: (context){
@@ -151,7 +148,6 @@ class _SuperDistributorState extends State<SuperDistributor> {
                     child: TextField(
                       cursorColor: Constants().primaryColor,
                       keyboardType: TextInputType.number,
-                      maxLength: 4,
                       onChanged: (val){
                         setState(() {
                           amount = val;
@@ -182,8 +178,8 @@ class _SuperDistributorState extends State<SuperDistributor> {
                     width: 280,
                     margin: EdgeInsets.only(left: 20,right: 20,top: 20),
                     child: FlatButton(
-                      onPressed: (){
-                        addMoney(id);
+                      onPressed: () {
+                         addMoney(id);
                       },
                       shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(4),
@@ -216,7 +212,7 @@ class _SuperDistributorState extends State<SuperDistributor> {
           Text("Please wait",style: TextStyle(),),
         ],
       ),
-    ):(onPressed == false)?SingleChildScrollView(
+    ):(superDistributors == null)?Container():(onPressed == false)?SingleChildScrollView(
       scrollDirection: Axis.vertical,
       child: Column(
         children: [
@@ -276,7 +272,7 @@ class _SuperDistributorState extends State<SuperDistributor> {
                         ),
                         DataCell(
                           FlatButton(
-                            onPressed: (){
+                            onPressed: () {
                               showDialogBox(item.id);
                             },
                             shape: RoundedRectangleBorder(

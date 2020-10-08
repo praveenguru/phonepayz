@@ -10,7 +10,8 @@ import 'package:phonepayz/utils/constants.dart';
 class PlansPage extends StatefulWidget{
   final String mobile;
   final String operator;
-  PlansPage({this.operator,this.mobile});
+  final String operatorName;
+  PlansPage({this.operator,this.mobile,this.operatorName});
   @override
   _PlansPageState createState() => _PlansPageState();
 }
@@ -135,7 +136,7 @@ class _PlansPageState extends State<PlansPage> {
             Navigator.pop(context);
           },
         ),
-        title: Text(widget.operator+" Plans",style: TextStyle(fontWeight: FontWeight.bold,color: Colors.white),),
+        title: Text(widget.operatorName+" Plans",style: TextStyle(fontWeight: FontWeight.bold,color: Colors.white),),
       ),
       body: MultiStateView(
         state: viewState,

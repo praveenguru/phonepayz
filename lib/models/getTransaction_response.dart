@@ -1,18 +1,12 @@
 class GetTransactionsResponse{
-  bool status;
-  String message;
   List<Transaction> data;
-  GetTransactionsResponse({this.status,this.message,this.data});
+  GetTransactionsResponse({this.data});
 
-  GetTransactionsResponse.fromJson(Map<String, dynamic>json){
-    this.status = json['status'] ?? false;
-    this.message = json['message'] ?? "";
-    this.data = json['data'].map<Transaction>((i) => Transaction.fromJson(i)).toList();
+  GetTransactionsResponse.fromJson(List<dynamic>list){
+    this.data = list.map<Transaction>((i) => Transaction.fromJson(i)).toList();
   }
 
   GetTransactionsResponse.withError(String errorMessage){
-    this.status = false;
-    this.message = errorMessage;
     this.data = [];
   }
 }
@@ -24,7 +18,10 @@ class Transaction{
   String status;
   String image;
   String operator;
-  Transaction({this.amount,this.mobile,this.type,this.status,this.operator,this.image});
+  String api_provider;
+  MobileServiceProvider provider;
+  TransactionUser user;
+  Transaction({this.amount,this.mobile,this.type,this.status,this.operator,this.image,this.provider,this.api_provider,this.user});
   Transaction.fromJson(Map<String, dynamic>json){
     this.amount = json['amount'] ?? 0;
     this.mobile = json['number'] ?? "";
@@ -32,48 +29,22 @@ class Transaction{
     this.status = json['status'] ?? "";
     this.image = json['image'] ?? "";
     this.operator = json['operator'] ?? "";
-  }
-}
-
-
-class GetAdminTransactions{
-  bool status;
-  String message;
-  List<AdminTransaction> data;
-  GetAdminTransactions({this.status,this.message,this.data});
-
-  GetAdminTransactions.fromJson(Map<String, dynamic>json){
-    this.status = json['status'] ?? false;
-    this.message = json['message'] ?? "";
-    this.data = json['data'].map<AdminTransaction>((i) => AdminTransaction.fromJson(i)).toList();
-  }
-
-  GetAdminTransactions.withError(String errorMessage){
-    this.status = false;
-    this.message = errorMessage;
-    this.data = [];
-  }
-}
-
-class AdminTransaction{
-  int amount;
-  String mobile;
-  String type;
-  String status;
-  String image;
-  String operator;
-  TransactionUser user;
-  AdminTransaction({this.amount,this.mobile,this.type,this.status,this.operator,this.image,this.user});
-  AdminTransaction.fromJson(Map<String, dynamic>json){
-    this.amount = json['amount'] ?? 0;
-    this.mobile = json['number'] ?? "";
-    this.type = json['type'] ?? "";
-    this.status = json['status'] ?? "";
+    this.api_provider = json['api_provider'] ?? "";
+    this.provider = MobileServiceProvider.fromJson(json['service_provider']);
     this.user = TransactionUser.fromJson(json['user']);
-    this.image = json['image'] ?? "";
-    this.operator = json['operator'] ?? "";
   }
 }
+
+class MobileServiceProvider{
+  String name;
+  String image;
+  MobileServiceProvider({this.name,this.image});
+  MobileServiceProvider.fromJson(Map<String, dynamic>json){
+    this.name = json['name'] ?? "";
+    this.image = json['image'] ?? "";
+  }
+}
+
 
 
 class TransactionUser{
@@ -92,3 +63,36 @@ class TransactionUser{
     this.name = json['name'] ?? "";
   }
 }
+
+class GetMobileTransactionResponse{
+  List<MobileTransaction> data;
+  GetMobileTransactionResponse({this.data});
+
+  GetMobileTransactionResponse.fromJson(List<dynamic>list){
+    this.data = list.map<MobileTransaction>((i) => MobileTransaction.fromJson(i)).toList();
+  }
+
+  GetMobileTransactionResponse.withError(String errorMessage){
+    this.data = [];
+  }
+}
+
+class MobileTransaction{
+  int amount;
+  String mobile;
+  String type;
+  String status;
+  String image;
+  String operator;
+  MobileTransaction({this.amount,this.mobile,this.type,this.status,this.operator,this.image});
+  MobileTransaction.fromJson(Map<String, dynamic>json){
+    this.amount = json['amount'] ?? 0;
+    this.mobile = json['number'] ?? "";
+    this.type = json['type'] ?? "";
+    this.status = json['status'] ?? "";
+    this.image = json['image'] ?? "";
+    this.operator = json['operator'] ?? "";
+  }
+}
+
+

@@ -6,7 +6,9 @@ import 'package:phonepayz/modules/adminTransactions/adminTransactions.dart';
 import 'package:phonepayz/modules/dashboard/dashboard.dart';
 import 'package:phonepayz/modules/distributor/distributor.dart';
 import 'package:phonepayz/modules/login/admin_login.dart';
+import 'package:phonepayz/modules/refund/refundRequests.dart';
 import 'package:phonepayz/modules/retailer/retailer.dart';
+import 'package:phonepayz/modules/settings/admin_settings.dart';
 import 'package:phonepayz/modules/superDistributor/super_distributor.dart';
 import 'package:phonepayz/utils/FadeTransitionPageRouteBuilder.dart';
 
@@ -21,7 +23,7 @@ class _AdminHomeState extends State<AdminHome>{
   @override
   Widget build(BuildContext context) {
     return DefaultTabController(
-      length: 5,
+      length: 7,
       child: Scaffold(
           backgroundColor: Colors.grey.shade100,
           appBar: PreferredSize(
@@ -71,6 +73,9 @@ class _AdminHomeState extends State<AdminHome>{
                             child: Text("Transactions"),
                           ),
                           Tab(
+                            child: Text("Refund Requests"),
+                          ),
+                          Tab(
                             child: Text("Super Distributors"),
                           ),
                           Tab(
@@ -78,6 +83,9 @@ class _AdminHomeState extends State<AdminHome>{
                           ),
                           Tab(
                             child: Text("Retailers"),
+                          ),
+                          Tab(
+                            child: Text("Settings"),
                           ),
                         ]
                     ),
@@ -88,17 +96,17 @@ class _AdminHomeState extends State<AdminHome>{
           ),
           body: Center(
             child: Container(
-              constraints: BoxConstraints(
-                  maxWidth: 1200
-              ),
+              padding: EdgeInsets.only(left: 30,right: 30),
               child: TabBarView(
                 physics: NeverScrollableScrollPhysics(),
                 children: [
                  Dashboard(),
                  AdminTransactions(),
-                 SuperDistributor(),
-                 Distributor(),
+                  RefundRequests(),
+                  SuperDistributor(),
+                  Distributor(),
                  Retailer(),
+                 AdminSettings()
                 ],
               ),
             ),

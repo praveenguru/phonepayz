@@ -4,8 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:phonepayz/components/admin_textfield_filled.dart';
 import 'package:phonepayz/components/button_filled.dart';
 import 'package:phonepayz/components/loader.dart';
-import 'package:phonepayz/models/getDistributor_response.dart';
-import 'package:phonepayz/models/getRetailers_response.dart';
+import 'package:phonepayz/models/getUser_response.dart';
 import 'package:phonepayz/network/api_provider.dart';
 import 'package:phonepayz/utils/constants.dart';
 
@@ -20,19 +19,19 @@ class _RetailerState extends State<Retailer> {
   String mobile = "";
   String address = "";
   String name = "";
-  String id = "";
+  int id = 0;
   bool onPressed = false;
   bool isLoading = false;
-  List<Retailers> retailers = [];
-  List<Distributors> distributors = [];
-  Distributors selectedDistributor;
+  List<UserData> retailers = [];
+  List<UserData> distributors = [];
+  UserData selectedDistributor;
 
   showErrorDialog(String message){
     showDialog(
         context: context,
         builder: (context){
           return AlertDialog(
-            title: Text("Alert",style: TextStyle(fontSize: 18,fontFamily: 'Quicksand',fontWeight: FontWeight.bold),),
+            title: Text("Message",style: TextStyle(fontSize: 18,fontFamily: 'Quicksand',fontWeight: FontWeight.bold),),
             content: Padding(
               padding: const EdgeInsets.only(top: 20),
               child: Text(message,style: TextStyle(fontSize: 14,fontFamily: 'Quicksand',height: 1.5),textAlign: TextAlign.center,),
@@ -63,14 +62,16 @@ class _RetailerState extends State<Retailer> {
     }
   }
 
-  getRetailers(String token){
-    ApiProvider().getRetailers(token).then((response) {
-      retailers = response.retailers;
-      setState(() {
-        isLoading = false;
-      });
-      if(response.status == false){
-        showErrorDialog(response.message);
+  getRetailers(){
+    setState(() {
+      isLoading = true;
+    });
+    ApiProvider().getUser(token, "Retailer").then((response) {
+      if(response != null){
+        retailers = response.userData;
+        setState(() {
+          isLoading = false;
+        });
       }
     }).catchError((error){
       setState(() {
@@ -79,15 +80,16 @@ class _RetailerState extends State<Retailer> {
       showErrorDialog(error.toString());
     });
   }
-
   getDistributors(String token){
-    ApiProvider().getDistributors(token).then((response) {
-      distributors = response.distributors;
-      setState(() {
-        isLoading = false;
-      });
-      if(response.status == false){
-        showErrorDialog(response.message);
+    setState(() {
+      isLoading = true;
+    });
+    ApiProvider().getUser(token, "Distributor").then((response) {
+      if(response != null){
+        distributors = response.userData;
+        setState(() {
+          isLoading = false;
+        });
       }
     }).catchError((error){
       setState(() {
@@ -106,26 +108,23 @@ class _RetailerState extends State<Retailer> {
       firebaseAuth.currentUser.getIdTokenResult(true).then((val) {
         print(val.token);
         token = val.token;
-        getRetailers(val.token);
+        getRetailers();
         getDistributors(token);
       });
     }
   }
 
-  addMoney(String id){
+  addMoney(int id){
     setState(() {
       isLoading = true;
     });
-    ApiProvider().addMoney(token, int.parse(amount), id).then((response) {
+    ApiProvider().addMoney(token, int.parse(amount), id).then((response) async{
+      Navigator.pop(context);
+      await showErrorDialog(response.message);
+      getRetailers();
       setState(() {
         isLoading = false;
       });
-      if(response.status){
-        Navigator.pop(context);
-        getRetailers(token);
-      }else{
-        showErrorDialog(response.message);
-      }
     }).catchError((error){
       setState(() {
         isLoading = false;
@@ -138,15 +137,11 @@ class _RetailerState extends State<Retailer> {
     setState(() {
       isLoading = true;
     });
-    ApiProvider().createRetailer(token, name, address, mobile, id).then((response){
-      print(id);
-      if(response.status){
-        onPressed = false;
-        getRetailers(token);
-      }else{
-        showErrorDialog(response.message);
-      }
+    ApiProvider().addUser(token, "Retailer", name, mobile, address, id).then((response) async{
+      await showErrorDialog(response.message);
+      await getRetailers();
       setState(() {
+        onPressed = false;
         isLoading = false;
       });
     }).catchError((error){
@@ -157,7 +152,7 @@ class _RetailerState extends State<Retailer> {
     });
   }
 
-  showDialogBox(String id){
+  showDialogBox(int id){
     showDialog(
         context: context,
         builder: (context){
@@ -175,7 +170,6 @@ class _RetailerState extends State<Retailer> {
                     child: TextField(
                       cursorColor: Constants().primaryColor,
                       keyboardType: TextInputType.number,
-                      maxLength: 4,
                       onChanged: (val){
                         setState(() {
                           amount = val;
@@ -240,7 +234,7 @@ class _RetailerState extends State<Retailer> {
           Text("Please wait",style: TextStyle(),),
         ],
       ),
-    ):(onPressed == false)?SingleChildScrollView(
+    ):(retailers == null)?Container():(onPressed == false)?SingleChildScrollView(
       scrollDirection: Axis.vertical,
       child: Column(
         children: [
@@ -407,20 +401,20 @@ class _RetailerState extends State<Retailer> {
                         child:  Row(
                           children: [
                             Expanded(
-                              child: DropdownButton<Distributors>(
-                                hint: Text("Select Super Distributor",style: TextStyle(fontSize: 14,color: Colors.grey.shade500),),
+                              child: DropdownButton<UserData>(
+                                hint: Text("Select Distributor",style: TextStyle(fontSize: 14,color: Colors.grey.shade500),),
                                 underline: Container(color: Colors.grey.shade200,),
                                 value: selectedDistributor,
                                 iconEnabledColor: Colors.grey.shade200,
                                 iconDisabledColor: Colors.grey.shade200,
-                                onChanged: (Distributors Value) {
+                                onChanged: (UserData Value) {
                                   setState(() {
                                     selectedDistributor = Value;
                                     id = selectedDistributor.id;
                                   });
                                 },
-                                items: distributors.map((Distributors user) {
-                                  return  DropdownMenuItem<Distributors>(
+                                items: distributors.map((UserData user) {
+                                  return  DropdownMenuItem<UserData>(
                                     value: user,
                                     child: Text(
                                       user.name,
